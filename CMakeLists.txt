@@ -17,7 +17,7 @@ target_link_libraries(test_ip_frag pcap)
 add_executable(test_ip ./test/ip_test.c ./src/ethernet.c ./src/arp.c ./src/ip.c ./test/faker/icmp.c ./test/faker/udp.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
 target_link_libraries(test_ip pcap)
 
-add_executable(test_arp ./test/arp_test.c ./src/ethernet.c ./src/arp.c ./test/faker/ip.c ./test/faker/driver.c ./test/global.c)
+add_executable(test_arp ./test/arp_test.c ./src/ethernet.c ./src/arp.c ./test/faker/ip.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
 target_link_libraries(test_arp pcap)
 
 add_executable(test_eth_out ./test/eth_out_test.c ./src/ethernet.c ./test/faker/arp.c ./test/faker/ip.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
