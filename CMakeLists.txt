@@ -7,9 +7,7 @@ add_executable(main ${DIR_SRCS})
 target_link_libraries(main pcap)
 
 
-
-
-SET(RUNTIME_OUTPUT_DIRECTORY ../test) 
+SET(EXECUTABLE_OUTPUT_PATH ../test) 
 add_executable(test_icmp ./test/icmp_test.c ./src/ethernet.c ./src/arp.c ./src/ip.c ./src/icmp.c ./test/faker/udp.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
 target_link_libraries(test_icmp pcap)
 
@@ -19,7 +17,7 @@ target_link_libraries(test_ip_frag pcap)
 add_executable(test_ip ./test/ip_test.c ./src/ethernet.c ./src/arp.c ./src/ip.c ./test/faker/icmp.c ./test/faker/udp.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
 target_link_libraries(test_ip pcap)
 
-add_executable(test_arp ./test/arp_test.c ./src/ethernet.c ./src/arp.c ./test/faker/ip.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
+add_executable(test_arp ./test/arp_test.c ./src/ethernet.c ./src/arp.c ./test/faker/ip.c ./test/faker/driver.c ./test/global.c)
 target_link_libraries(test_arp pcap)
 
 add_executable(test_eth_out ./test/eth_out_test.c ./src/ethernet.c ./test/faker/arp.c ./test/faker/ip.c ./test/faker/driver.c ./test/global.c ./src/utils.c)
