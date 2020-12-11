@@ -6,6 +6,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#define HEADLENGTH 14
+#define IP 0
+#define ARP 6
 /**
  * @brief 处理一个收到的数据包
  *        你需要判断以太网数据帧的协议类型，注意大小端转换
@@ -16,7 +19,23 @@
  */
 void ethernet_in(buf_t *buf)
 {
-    // TODO
+    char *ethernet_head = buf->data;
+    unsigned char *p = ethernet_head;
+    if (p[12] == 8) {
+        switch (p[13])
+        {
+            case IP:
+                buf_remove_header(buf, HEADLENGTH);
+                ip_in(buf);
+                break;
+            case ARP:
+                buf_remove_header(buf, HEADLENGTH);
+                arp_in(buf);
+                break;
+            default: 
+                break;
+        }
+    }
     
 }
 
@@ -31,8 +50,22 @@ void ethernet_in(buf_t *buf)
  */
 void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol)
 {
-    // TODO
-
+    buf_add_header(buf, HEADLENGTH);
+    char *ethernet_head = buf->data;
+    unsigned char *p = ethernet_head;
+    for (int i = 0; i < 6; i++) {
+        p[i] = mac[i];
+    }
+    p = ethernet_head + 6;
+    p[0] = 0x11;
+    p[1] = 0x22;
+    p[2] = 0x33;
+    p[3] = 0x44;
+    p[4] = 0x55;
+    p[5] = 0x66;
+    p[6] = (protocol&0xFF00)>>8;
+    p[7] = (protocol&0x00FF);
+    driver_send(buf);
 }
 
 /**
