@@ -57,7 +57,7 @@ void ip_fragment_out(buf_t *buf, uint8_t *ip, net_protocol_t protocol, int id, u
  *        （2）将数据报截断，每个截断后的包长度 = 以太网帧的最大包长，调用ip_fragment_out()函数发送出去
  *        （3）如果截断后最后的一个分片小于或等于以太网帧的最大包长，
  *             调用buf_init()函数初始化buf，长度为该分片大小，再调用ip_fragment_out()函数发送出去
- *             注意：id为IP数据报的分片标识，从0开始编号，每增加一个分片，自加1。最后一个分片的MF = 0
+ *             注意：最后一个分片的MF = 0
  *    
  *        如果没有超过以太网帧的最大包长，则直接调用调用ip_fragment_out()函数发送出去。
  * 
