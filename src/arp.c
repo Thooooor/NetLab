@@ -44,7 +44,25 @@ arp_buf_t arp_buf;
  */
 void arp_update(uint8_t *ip, uint8_t *mac, arp_state_t state)
 {
-    // TODO
+    // 轮询是否有超时
+    for (int i = 0; i < ARP_MAX_ENTRY; i++) {
+        if (arp_table[i].timeout > ARP_TIMEOUT_SEC) {
+            arp_table[i].state = ARP_INVALID;
+        }
+    }
+    // 是否有无效表项
+    for (int i = 0; i < ARP_MAX_ENTRY; i++) {
+        if (arp_table[i].state == ARP_INVALID) {
+            arp_table[i].state = ARP_VALID;
+            for (int j = 0; j < NET_MAC_LEN; j++) arp_table[i].mac[j] = mac[j];
+            for (int j = 0; j < NET_IP_LEN; j++) arp_table[i].ip[j] = ip[j];
+            return;
+        }
+    }
+    // 查找超时时间最长的一条表项
+    for (int i = 0; i < ARP_MAX_ENTRY; i++) {
+        
+    }
 
 }
 
@@ -95,8 +113,43 @@ static void arp_req(uint8_t *target_ip)
  */
 void arp_in(buf_t *buf)
 {
-    // TODO
-    
+    arp_pkt_t *arp = (arp_pkt_t *)buf->data;
+    int opcode = swap16(arp->opcode);
+    if (arp->hw_type != swap16(ARP_HW_ETHER)
+        || arp->pro_type != swap16(NET_PROTOCOL_IP)
+        || arp->hw_len != NET_MAC_LEN
+        || arp->pro_len != NET_IP_LEN
+        || (opcode != ARP_REQUEST && opcode != ARP_REPLY)
+    ) return;
+
+    arp_update(arp->sender_ip, arp->sender_mac, ARP_VALID);
+    if (arp_buf.valid){
+        uint8_t *target_mac = arp_lookup(arp->sender_ip);
+        if (target_mac == NULL) return;
+        ethernet_out(buf, net_if_mac, NET_PROTOCOL_ARP);
+    } else {
+        if (opcode != ARP_REQUEST) return;
+        for (int i = 0; i < NET_MAC_LEN; i++) {
+            if (arp->target_mac[i] != net_if_mac[i]) return;
+        }
+        buf_t *request_arp;
+        buf_init(request_arp, sizeof(arp_buf_t));
+        arp_pkt_t *header = (arp_pkt_t *)request_arp->data;
+        header->hw_type = swap16(ARP_HW_ETHER);
+        header->pro_type = swap16(NET_PROTOCOL_IP);
+        header->hw_len != NET_MAC_LEN;
+        header->pro_len = NET_IP_LEN;
+        header->opcode = swap16(ARP_REPLY);
+        for (int i = 0; i < NET_MAC_LEN; i++) {
+            header->sender_mac[i] = net_if_mac[i];
+            header->target_mac[i] = arp->sender_mac[18+i];
+        }
+        for (int i = 0; i < NET_IP_LEN; i++) {
+            header->sender_ip[i] = net_if_ip[i];
+            header->target_ip[i] = arp->sender_ip[24+i];
+        }
+        ethernet_out(request_arp, net_if_mac, NET_PROTOCOL_ARP);
+    }
 }
 
 /**
