@@ -45,7 +45,7 @@ void ethernet_in(buf_t *buf)
  *        添加完成后将以太网数据帧发送到驱动层
  * 
  * @param buf 要处理的数据包
- * @param mac 目标ip地址
+ * @param mac 目标mac地址
  * @param protocol 上层协议
  */
 void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol)
