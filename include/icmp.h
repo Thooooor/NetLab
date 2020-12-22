@@ -22,6 +22,7 @@ typedef enum icmp_type
 
 typedef enum icmp_code
 {
+    ICMP_CODE_ECHO_REQUEST = 0,     // 回显请求（Ping 请求）
     ICMP_CODE_PROTOCOL_UNREACH = 2, // 协议不可达
     ICMP_CODE_PORT_UNREACH = 3      // 端口不可达
 } icmp_code_t;
