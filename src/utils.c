@@ -82,6 +82,17 @@ void buf_copy(buf_t *dst, buf_t *src)
  */
 uint16_t checksum16(uint16_t *buf, int len)
 {
-    // TODO
+    uint32_t temp = 0;
+    // 二进制求和
+    for (int i = 0; len-i*sizeof(uint16_t); i++) temp += (uint32_t)buf[i];
+    // 高16位与低16位相加
+    temp = (temp >> 16) + (temp & 0xFFFF);
+    // 结果加到低16位
+    temp += temp >> 16;
+    uint16_t checksum = temp & 0x0000FFFF;
+    // 取反
+    checksum = ~checksum;
+
+    return checksum;
         
 }
