@@ -65,6 +65,7 @@ void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol)
     p[5] = 0x66;
     p[6] = (protocol&0xFF00)>>8;
     p[7] = (protocol&0x00FF);
+    
     driver_send(buf);
 }
 

@@ -98,7 +98,7 @@ int driver_send(buf_t *buf)
         fprintf(stderr, "Error in driver_send: %s\n", pcap_geterr(pcap));
         return -1;
     }
-
+    
     return 0;
 }
 
