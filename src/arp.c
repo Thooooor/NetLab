@@ -129,6 +129,7 @@ static void arp_req(uint8_t *target_ip)
 void arp_in(buf_t *buf)
 {
     arp_pkt_t *header = (arp_pkt_t *)buf->data;
+    // 报头检查
     int opcode = swap16(header->opcode);
     if (header->hw_type != swap16(ARP_HW_ETHER)
         || header->pro_type != swap16(NET_PROTOCOL_IP)
@@ -136,9 +137,9 @@ void arp_in(buf_t *buf)
         || header->pro_len != NET_IP_LEN
         || (opcode != ARP_REQUEST && opcode != ARP_REPLY)
     ) return;
-
+    // 更新ARP表项
     arp_update(header->sender_ip, header->sender_mac, ARP_VALID);
-
+    // 检查arp_buf是否有效
     if (arp_buf.valid){
         uint8_t *target_mac;
         target_mac = arp_lookup(header->sender_ip);
@@ -150,7 +151,7 @@ void arp_in(buf_t *buf)
         for (int i = 0; i < NET_IP_LEN; i++) {
             if (header->target_ip[i] != net_if_ip[i]) return;
         }
-
+        // 回应响应报文
         buf_init(&txbuf, sizeof(arp_pkt_t));
         arp_pkt_t *sender = (arp_pkt_t *)txbuf.data;
         *sender = arp_init_pkt;
