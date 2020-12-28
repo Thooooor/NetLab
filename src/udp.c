@@ -112,8 +112,8 @@ void udp_out(buf_t *buf, uint16_t src_port, uint8_t *dest_ip, uint16_t dest_port
     udp_hdr_t *header = (udp_hdr_t *)buf->data;
     // 填充UDP首部字段
     header->src_port = swap16(src_port);
-    header->dest_port = swap(dest_port);
-    header->total_len = swap(buf->len);
+    header->dest_port = swap16(dest_port);
+    header->total_len = swap16(buf->len);
     // 计算校验和
     header->checksum = 0;
     header->checksum = udp_checksum(buf, net_if_ip, dest_ip);
