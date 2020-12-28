@@ -28,8 +28,25 @@ static udp_entry_t udp_table[UDP_MAX_HANDLER];
  */
 static uint16_t udp_checksum(buf_t *buf, uint8_t *src_ip, uint8_t *dest_ip)
 {
-    // TODO
-    
+    udp_hdr_t *udp_hdr = (udp_hdr_t *)buf->data;
+    buf_add_header(buf, sizeof(udp_hdr_t));
+    udp_peso_hdr_t *peso_hdr= (udp_peso_hdr_t *)buf->data;
+
+    udp_peso_hdr_t temp_hdr = *peso_hdr;
+
+    for (int i = 0; i < NET_IP_LEN; i++) peso_hdr->src_ip[i] = src_ip[i];
+    for (int i = 0; i < NET_IP_LEN; i++) peso_hdr->dest_ip[i] = dest_ip[i];
+
+    peso_hdr->placeholder = 0;
+    peso_hdr->protocol = NET_PROTOCOL_UDP;
+    peso_hdr->total_len = udp_hdr->total_len;
+
+    uint16_t checksum =  checksum16((uint16_t *)buf->data, swap16(udp_hdr->total_len) + sizeof(udp_peso_hdr_t));
+
+    *peso_hdr = temp_hdr;
+
+    buf_remove_header(buf, sizeof(udp_peso_hdr_t));
+    return checksum;
 }
 
 /**
@@ -52,8 +69,28 @@ static uint16_t udp_checksum(buf_t *buf, uint8_t *src_ip, uint8_t *dest_ip)
  */
 void udp_in(buf_t *buf, uint8_t *src_ip)
 {
-    // TODO
-
+    
+    udp_hdr_t *header = (udp_hdr_t *) buf->data;
+    // 检查长度
+    uint16_t udp_header_len = ETHERNET_MTU - sizeof(ip_hdr_t);
+    if (swap16(header->total_len) > udp_header_len) return;
+    // 计算校验和
+    uint16_t temp_checksum = header->checksum;
+    header->checksum = 0;
+    header->checksum = udp_checksum(buf, src_ip, net_if_ip);
+    if (header->checksum != temp_checksum) return;
+    // 根据端口号查找udp table中对应的处理函数
+    for (int i = 0; i < UDP_MAX_HANDLER; i++) {
+        if (udp_table[i].valid && udp_table[i].port == header->dest_port) {
+            // if (buf->len <= 26) buf->len = sizeof(udp_hdr_t) + len;
+            buf_remove_header(buf, sizeof(udp_hdr_t));
+            udp_table[i].handler(&udp_table[i], src_ip, udp_table[i].port, buf);
+            return;
+        }
+    }
+    //没有找到，添加IP头部，发送差错报文
+    buf_add_header(buf, sizeof(ip_hdr_t));
+    icmp_unreachable(buf, src_ip, ICMP_CODE_PORT_UNREACH);
 }
 
 /**
@@ -70,8 +107,18 @@ void udp_in(buf_t *buf, uint8_t *src_ip)
  */
 void udp_out(buf_t *buf, uint16_t src_port, uint8_t *dest_ip, uint16_t dest_port)
 {
-    // TODO
-
+    // 增加报头长度
+    buf_add_header(buf, sizeof(udp_hdr_t));
+    udp_hdr_t *header = (udp_hdr_t *)buf->data;
+    // 填充UDP首部字段
+    header->src_port = swap16(src_port);
+    header->dest_port = swap(dest_port);
+    header->total_len = swap(buf->len);
+    // 计算校验和
+    header->checksum = 0;
+    header->checksum = udp_checksum(buf, net_if_ip, dest_ip);
+    // 发送
+    ip_out(buf, dest_ip, NET_PROTOCOL_UDP);
 }
 
 /**
