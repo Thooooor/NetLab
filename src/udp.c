@@ -28,23 +28,23 @@ static udp_entry_t udp_table[UDP_MAX_HANDLER];
  */
 static uint16_t udp_checksum(buf_t *buf, uint8_t *src_ip, uint8_t *dest_ip)
 {
+    // 添加头部
     udp_hdr_t *udp_hdr = (udp_hdr_t *)buf->data;
     buf_add_header(buf, sizeof(udp_peso_hdr_t));
-
+    // 拷贝，暂存
     udp_peso_hdr_t *peso_hdr= (udp_peso_hdr_t *)buf->data;
     udp_peso_hdr_t temp_ip_header = *peso_hdr;
-
+    // 填写头部
     for (int i = 0; i < NET_IP_LEN; i++) peso_hdr->src_ip[i] = src_ip[i];
     for (int i = 0; i < NET_IP_LEN; i++) peso_hdr->dest_ip[i] = dest_ip[i];
-
     peso_hdr->placeholder = 0;
     peso_hdr->protocol = NET_PROTOCOL_UDP;
     peso_hdr->total_len = udp_hdr->total_len;
-
+    // 计算校验和
     uint16_t checksum =  checksum16((uint16_t *)buf->data, swap16(udp_hdr->total_len) + sizeof(udp_peso_hdr_t));
-
+    // 拷贝回来
     *peso_hdr = temp_ip_header;
-
+    // 去掉伪头部
     buf_remove_header(buf, sizeof(udp_peso_hdr_t));
     return checksum;
 }
