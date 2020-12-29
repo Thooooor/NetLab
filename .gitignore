@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 files/
 __pycache__/
+=======
+build/
+.vscode/
+>>>>>>> 15496719caaec6790de9855bde689125f2bbd2b5

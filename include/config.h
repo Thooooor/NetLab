@@ -4,7 +4,7 @@
 #define DRIVER_IF_NAME "ens33" //使用的物理网卡名称
 #define DRIVER_IF_IP      \
     {                     \
-        192, 168, 163, 103 \
+        192, 168, 80, 103 \
     } //自定义网卡ip地址
 #define DRIVER_IF_MAC                      \
     {                                      \

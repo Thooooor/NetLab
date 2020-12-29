@@ -22,12 +22,11 @@ int driver_open()
         fprintf(stderr, "Error in pcap_lookupnet: %s\n", pcap_geterr(pcap));
         return -1;
     }
-
     // 获取一个数据包捕获的描述符，以便用来查看网络上的数据包。
     // 第二个参数表示捕获的最大字节数，通常来说数据包的大小不会超过65535
     // 第三个参数表示开启混杂模式，0表示非混杂模式，任何其他值表示混合模式
     // 第四个参数指定需要等待的毫秒数，0表示一直等待直到有数据包到来
-    if ((pcap = pcap_open_live(DRIVER_IF_NAME, 65536, 1, 0, pcap_errbuf)) == NULL) //混杂模式打开网卡
+    if ((pcap = pcap_open_live(DRIVER_IF_NAME, 65536, 1, 10, pcap_errbuf)) == NULL) //混杂模式打开网卡
     {
         fprintf(stderr, "Error in pcap_open_live: %s.\n", pcap_geterr(pcap));
         return -1;
@@ -98,7 +97,7 @@ int driver_send(buf_t *buf)
         fprintf(stderr, "Error in driver_send: %s\n", pcap_geterr(pcap));
         return -1;
     }
-    
+
     return 0;
 }
 
