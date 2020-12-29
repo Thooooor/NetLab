@@ -29,10 +29,10 @@ static udp_entry_t udp_table[UDP_MAX_HANDLER];
 static uint16_t udp_checksum(buf_t *buf, uint8_t *src_ip, uint8_t *dest_ip)
 {
     udp_hdr_t *udp_hdr = (udp_hdr_t *)buf->data;
-    buf_add_header(buf, sizeof(udp_hdr_t));
-    udp_peso_hdr_t *peso_hdr= (udp_peso_hdr_t *)buf->data;
+    buf_add_header(buf, sizeof(udp_peso_hdr_t));
 
-    udp_peso_hdr_t temp_hdr = *peso_hdr;
+    udp_peso_hdr_t *peso_hdr= (udp_peso_hdr_t *)buf->data;
+    udp_peso_hdr_t temp_ip_header = *peso_hdr;
 
     for (int i = 0; i < NET_IP_LEN; i++) peso_hdr->src_ip[i] = src_ip[i];
     for (int i = 0; i < NET_IP_LEN; i++) peso_hdr->dest_ip[i] = dest_ip[i];
@@ -43,7 +43,7 @@ static uint16_t udp_checksum(buf_t *buf, uint8_t *src_ip, uint8_t *dest_ip)
 
     uint16_t checksum =  checksum16((uint16_t *)buf->data, swap16(udp_hdr->total_len) + sizeof(udp_peso_hdr_t));
 
-    *peso_hdr = temp_hdr;
+    *peso_hdr = temp_ip_header;
 
     buf_remove_header(buf, sizeof(udp_peso_hdr_t));
     return checksum;
@@ -69,7 +69,6 @@ static uint16_t udp_checksum(buf_t *buf, uint8_t *src_ip, uint8_t *dest_ip)
  */
 void udp_in(buf_t *buf, uint8_t *src_ip)
 {
-    
     udp_hdr_t *header = (udp_hdr_t *) buf->data;
     // 检查长度
     uint16_t udp_header_len = ETHERNET_MTU - sizeof(ip_hdr_t);
@@ -79,10 +78,12 @@ void udp_in(buf_t *buf, uint8_t *src_ip)
     header->checksum = 0;
     header->checksum = udp_checksum(buf, src_ip, net_if_ip);
     if (header->checksum != temp_checksum) return;
+
+    int length = swap16(header->total_len)- sizeof(udp_hdr_t);
     // 根据端口号查找udp table中对应的处理函数
     for (int i = 0; i < UDP_MAX_HANDLER; i++) {
-        if (udp_table[i].valid && udp_table[i].port == header->dest_port) {
-            // if (buf->len <= 26) buf->len = sizeof(udp_hdr_t) + len;
+        if (udp_table[i].valid && udp_table[i].port == swap16(header->dest_port)) {
+            if (buf->len <= 26) buf->len = sizeof(udp_hdr_t) + length;
             buf_remove_header(buf, sizeof(udp_hdr_t));
             udp_table[i].handler(&udp_table[i], src_ip, udp_table[i].port, buf);
             return;
